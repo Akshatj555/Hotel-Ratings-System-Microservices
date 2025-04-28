@@ -1,6 +1,7 @@
 package com.user.service.services.impl;
 
 import com.netflix.discovery.converters.Auto;
+import com.user.service.enternalservices.HotelService;
 import com.user.service.entities.Hotel;
 import com.user.service.entities.Rating;
 import com.user.service.entities.User;
@@ -27,6 +28,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private HotelService hotelService;
+
     @Override
     public User saveUser(User user) {
 
@@ -44,13 +48,14 @@ public class UserServiceImpl implements UserService {
     public User getUser(String userId) {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found with user id: "+ userId));
-        Rating[] ratingsForUser = restTemplate.getForObject("http://localhost:8083/ratings/users/" + userId, Rating[].class);
+        Rating[] ratingsForUser = restTemplate.getForObject("http://RATING-SERVICE/ratings/users/" + userId, Rating[].class);
         List<Rating> ratings = Arrays.stream(ratingsForUser).toList();
 
         List<Rating> ratingsWithHotel = ratings.stream().map(rating -> {
 
-            ResponseEntity<Hotel> hotelEntity = restTemplate.getForEntity("http://localhost:8082/hotels/" + rating.getHotelId(), Hotel.class);
-            Hotel hotel = hotelEntity.getBody();
+//            ResponseEntity<Hotel> hotelEntity = restTemplate.getForEntity("http://HOTEL-SERVICE/hotels/" + rating.getHotelId(), Hotel.class);
+//            Hotel hotel = hotelEntity.getBody();
+            Hotel hotel = hotelService.getHotel(rating.getHotelId());
             rating.setHotel(hotel);
 
             return rating;
